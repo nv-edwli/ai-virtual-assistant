@@ -3,7 +3,9 @@ include:
   - nims.yaml
 networks:
   default:
-    name: nvidia-rag
+    name: workbench
+    driver: bridge
+    external: true
 services:
   agent-chain-server:
     build:
