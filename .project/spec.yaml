@@ -32,7 +32,7 @@ environment:
     supported_architectures: []
     cuda_version: ""
     description: A Python Base with Jupyterlab
-    entrypoint_script: ""
+    entrypoint_script: /project/entrypoint.sh
     labels:
     - ubuntu
     - python3

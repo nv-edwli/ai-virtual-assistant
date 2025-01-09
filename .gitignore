@@ -1,4 +1,5 @@
 deploy/compose/volumes/
+data/manuals_pdf/
 notebooks/.ipynb_checkpoints
 
 # Ignore generated or temporary files managed by the Workbench
