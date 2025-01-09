@@ -4,88 +4,6 @@ networks:
     driver: bridge
     external: true
 services:
-  nemollm-inference:
-    container_name: nemollm-inference-microservice
-    image: nvcr.io/nim/meta/llama-3.1-70b-instruct:1.1
-    volumes:
-    # Use current path for model directory if nothing is specified
-    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
-    user: "${USERID:-1000:1000}"
-    ports:
-    - "8000:8000"
-    expose:
-    - "8000"
-    environment:
-      NGC_API_KEY: ${NGC_API_KEY}
-    shm_size: 20gb
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              # count: ${INFERENCE_GPU_COUNT:-all}
-              device_ids: ['${LLM_MS_GPU_ID:-0,1,2,3}']
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health/ready"]
-      interval: 10s
-      timeout: 20s
-      retries: 100
-    profiles: ["local-nim"]
-
-  nemollm-embedding:
-    container_name: nemo-retriever-embedding-microservice
-    image: nvcr.io/nim/nvidia/nv-embedqa-e5-v5:1.0.1
-    volumes:
-    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
-    ports:
-    - "9080:8000"
-    expose:
-    - "8000"
-    environment:
-      NGC_API_KEY: ${NGC_API_KEY}
-    user: "${USERID:-1000:1000}"
-    shm_size: 16GB
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['${EMBEDDING_MS_GPU_ID:-4}']
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health/ready"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-      start_period: 10m
-    profiles: ["local-nim"]
-
-  ranking-ms:
-    container_name: nemo-retriever-ranking-microservice
-    image: nvcr.io/nim/nvidia/nv-rerankqa-mistral-4b-v3:1.0.1
-    volumes:
-    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
-    ports:
-    - "1976:8000"
-    expose:
-    - "8000"
-    environment:
-      NGC_API_KEY: ${NGC_API_KEY}
-    user: "${USERID:-1000:1000}"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 20s
-      retries: 100
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['${RANKING_MS_GPU_ID:-5}']
-              capabilities: [gpu]
-    profiles: ["local-nim"]
   agent-chain-server:
     build:
       dockerfile: src/agent/Dockerfile
@@ -205,7 +123,7 @@ services:
       timeout: 20s
     image: quay.io/coreos/etcd:v3.5.17
     volumes:
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/etcd:/etcd
+    - ./deploy/compose/volumes/etcd:/etcd # ${DOCKER_VOLUME_DIRECTORY:-.}
   milvus:
     command:
     - milvus
@@ -246,7 +164,7 @@ services:
     - 19530:19530
     - 9091:9091
     volumes:
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/milvus:/var/lib/milvus
+    - ./deploy/compose/volumes/milvus:/var/lib/milvus # ${DOCKER_VOLUME_DIRECTORY:-.}
   minio:
     command: minio server /minio_data --console-address ":9011" --address ":9010"
     container_name: milvus-minio
@@ -268,7 +186,7 @@ services:
     - 9011:9011
     - 9010:9010
     volumes:
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/minio:/minio_data
+    - ./deploy/compose/volumes/minio:/minio_data # ${DOCKER_VOLUME_DIRECTORY:-.}
   pgadmin:
     container_name: pgadmin_container
     environment:
@@ -282,7 +200,7 @@ services:
     restart: unless-stopped
     user: 0:0
     volumes:
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/pgadmin:/var/lib/pgadmin
+    - ./deploy/compose/volumes/pgadmin:/var/lib/pgadmin
   postgres:
     command:
     - postgres
@@ -309,7 +227,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./deploy/compose/init-scripts:/docker-entrypoint-initdb.d
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/postgres_data:/var/lib/postgresql/data
+    - ./deploy/compose/volumes/postgres_data:/var/lib/postgresql/data # ${DOCKER_VOLUME_DIRECTORY:-.}
   redis:
     environment:
     - NVWB_TRIM_PREFIX=true
@@ -318,7 +236,7 @@ services:
     - 6379:6379
     restart: always
     volumes:
-    - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/redis-data:/data
+    - ./deploy/compose/volumes/redis-data:/data # ${DOCKER_VOLUME_DIRECTORY:-.}
   redis-commander:
     environment:
     - REDIS_HOSTS=local:redis:6379
@@ -337,9 +255,9 @@ services:
     depends_on:
       milvus:
         condition: service_healthy
-      nemollm-embedding:
-        condition: service_healthy
-        required: false
+      # nemollm-embedding:
+      #   condition: service_healthy
+      #   required: false
       postgres:
         condition: service_healthy
         required: false
