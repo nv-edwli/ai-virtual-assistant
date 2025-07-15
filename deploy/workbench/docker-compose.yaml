@@ -318,9 +318,9 @@ services:
         required: false
       milvus:
         condition: service_healthy
-      nemollm-embedding:
-        condition: service_healthy
-        required: false
+      # nemollm-embedding:
+      #   condition: service_healthy
+      #   required: false
 
   # =======================
   # Database Services - User purchase history and permanently store conversation details
@@ -340,7 +340,7 @@ services:
       - "max_connections=200"
     volumes:
        - ./init-scripts:/docker-entrypoint-initdb.d  # Mount initialization scripts
-       - ${DOCKER_VOLUME_DIRECTORY:-./volumes/postgres_data}:/var/lib/postgresql/data
+       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
@@ -360,7 +360,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     user: '$UID:$GID'
     volumes:
-       - ${DOCKER_VOLUME_DIRECTORY:-./volumes/pgadmin}:/var/lib/pgadmin
+       - pgadmin:/var/lib/pgadmin
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     restart: unless-stopped
@@ -375,7 +375,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-       - ${DOCKER_VOLUME_DIRECTORY:-./volumes/redis-data}:/data
+       - redis:/data
 
   redis-commander:
     # Visualization tool for redis
@@ -458,7 +458,10 @@ services:
               device_ids: ['${VECTORSTORE_GPU_DEVICE_ID:-0}']
 
 volumes:
-  database:
+  postgres_data:
+  pgadmin:
+  redis:
+  vectordb:
 
 networks:
   default:
