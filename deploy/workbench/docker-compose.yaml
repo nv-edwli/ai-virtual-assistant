@@ -4,7 +4,7 @@ services:
     image: nvcr.io/nim/meta/llama-3.1-70b-instruct:1.1
     volumes:
     # Use /tmp for model directory if nothing is specified
-    - ${MODEL_DIRECTORY:-/tmp}:/opt/nim/.cache
+    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
     user: "${USERID:-1000:1000}"
     ports:
     - "8000:8000"
@@ -32,7 +32,7 @@ services:
     container_name: nemo-retriever-embedding-microservice
     image: nvcr.io/nim/nvidia/llama-3.2-nv-embedqa-1b-v2:1.3.0
     volumes:
-    - ${MODEL_DIRECTORY:-/tmp}:/opt/nim/.cache
+    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
     ports:
     - "9080:8000"
     expose:
@@ -60,7 +60,7 @@ services:
     container_name: nemo-retriever-ranking-microservice
     image: nvcr.io/nim/nvidia/llama-3.2-nv-rerankqa-1b-v2:1.3.0
     volumes:
-    - ${MODEL_DIRECTORY:-/tmp}:/opt/nim/.cache
+    - ${MODEL_DIRECTORY:-.}:/opt/nim/.cache
     ports:
     - "1976:8000"
     expose:

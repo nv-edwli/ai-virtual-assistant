@@ -13,3 +13,5 @@ ruff
 ujson
 jupyterlab>3.0
 gradio==4.43.0
+pandas
+psycopg2-binary
